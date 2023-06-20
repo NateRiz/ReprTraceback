@@ -15,3 +15,7 @@ __pycache__/
 *.swo
 *.bak
 *.save
+
+# Exclude build artifacts
+ReprTraceback.egg-info/
+dist/
