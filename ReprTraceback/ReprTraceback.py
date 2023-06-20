@@ -12,16 +12,18 @@ def repr_exception_handler(type_, value, exc_tb):
 
     for item in ReprTraceback.from_list(traceback).format():
         print(item, file=sys.stderr, end="")
-    print(F"{type_}: {value}", file=sys.stderr)
+    print(F"{type_.__name__}: {value}", file=sys.stderr)
 
 
 class ReprFrameSummary(tb.FrameSummary):
-    def __init__(self, f_back, f_code, filename, lineno, name, lookup_line=True, locals=None, line=None, end_lineno=None,
-                 colno=None, end_colno=None):
+    def __init__(self, f_back, f_code, local_global_lookup, filename, lineno, name, lookup_line=True, locals=None,
+                 line=None, end_lineno=None, colno=None, end_colno=None):
         super().__init__(filename, lineno, name, lookup_line=lookup_line, locals=locals, line=line,
                          end_lineno=end_lineno, colno=colno, end_colno=end_colno)
         self.f_back = f_back
         self.f_code = f_code
+        self.local_global_lookup = local_global_lookup
+
 
 class ReprTraceback(tb.StackSummary):
     @classmethod
@@ -47,12 +49,13 @@ class ReprTraceback(tb.StackSummary):
             fnames.add(filename)
             linecache.lazycache(filename, f.f_globals)
             # Must defer line lookups until we have called checkcache.
-            f_locals = f.f_locals
             f_back = f.f_back
             f_code = f.f_code
-            result.append(ReprFrameSummary(f_back, f_code,
-                filename, lineno, name, lookup_line=False, locals=f_locals,
-                end_lineno=end_lineno, colno=colno, end_colno=end_colno))
+            local_global_lookup = f.f_globals
+            local_global_lookup.update(f.f_locals)
+            result.append(
+                ReprFrameSummary(f_back, f_code, local_global_lookup, filename, lineno, name, lookup_line=False,
+                                 locals=None, end_lineno=end_lineno, colno=colno, end_colno=end_colno))
         for filename in fnames:
             linecache.checkcache(filename)
         # If immediate lookup was desired, trigger lookups now.
@@ -62,14 +65,14 @@ class ReprTraceback(tb.StackSummary):
                 if formatted_line:
                     f._line = formatted_line
                 f.line
-                f.locals.clear()
         return result
 
     @staticmethod
     def get_formatted_function_exception(current_frame: ReprFrameSummary):
         if current_frame.f_back is None:
             return ""
-        func = current_frame.f_back.f_locals[current_frame.f_code.co_name]
+        # print(current_frame.f_back.f_locals)
+        func = current_frame.local_global_lookup[current_frame.f_code.co_name]
         argspec = inspect.getfullargspec(func)
         argument_names = list(argspec.args)
         if argspec.varargs:
@@ -77,9 +80,15 @@ class ReprTraceback(tb.StackSummary):
         if argspec.varkw:
             argument_names.append(argspec.varkw)
 
-        arg_pairs = [(name, current_frame.locals[name]) for name in argument_names]
+        arg_pairs = []
+        for name in argument_names:
+            value = current_frame.local_global_lookup[name] if name in current_frame.local_global_lookup else "?"
+            arg_pairs.append((name, value))
+
+
         return F"{current_frame.f_code.co_name}(" + ", ".join(
-            [F"{arg_name}: {arg_value}" for arg_name, arg_value in arg_pairs]) + ")"
+            [F"{arg_name}={arg_value}" for arg_name, arg_value in arg_pairs]) + ")"
+
 
 def init():
     sys.excepthook = repr_exception_handler
