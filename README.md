@@ -43,7 +43,7 @@ pip install ReprTraceback
 ## Usage
 Import and Init ReprTraceback.
 ```python
-import ReprTraceback
+from ReprTraceback import ReprTraceback
 
 # Call the init() function to set up the new traceback handler
 ReprTraceback.init()
