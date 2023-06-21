@@ -10,6 +10,9 @@ def repr_exception_handler(type_, value, exc_tb):
     tb_gen = tb._walk_tb_with_full_positions(exc_tb)
     traceback = ReprTraceback.extract_from_extended_frame_gen(tb_gen)
 
+    for item in ReprTraceback.from_list(traceback).format():
+        print(item, file=sys.stderr, end="")
+    print(F"{type_.__name__}: {value}", file=sys.stderr)
 class ReprFrameSummary(tb.FrameSummary):
     def __init__(self, f_back, f_code, filename, lineno, name, lookup_line=True, locals=None,
                  line=None, end_lineno=None, colno=None, end_colno=None):
@@ -65,19 +68,17 @@ class ReprTraceback(tb.StackSummary):
     def get_formatted_function_exception(current_frame: ReprFrameSummary):
         if current_frame.f_back is None:
             return ""
-        func = current_frame.locals[current_frame.f_code.co_name]
-        argspec = inspect.getfullargspec(func)
-        argument_names = list(argspec.args)
-        if argspec.varargs:
-            argument_names.append(argspec.varargs)
-        if argspec.varkw:
-            argument_names.append(argspec.varkw)
+        args, varargs, kwargs = inspect.getargs(current_frame.f_code)
+        argument_names = list(args)
+        if varargs:
+            argument_names.append(varargs)
+        if kwargs:
+            argument_names.append(kwargs)
 
         arg_pairs = []
         for name in argument_names:
             value = current_frame.locals.get(name, "?")
             arg_pairs.append((name, value))
-
 
         return F"{current_frame.f_code.co_name}(" + ", ".join(
             [F"{arg_name}={arg_value}" for arg_name, arg_value in arg_pairs]) + ")"

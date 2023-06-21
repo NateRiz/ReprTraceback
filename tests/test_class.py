@@ -16,6 +16,9 @@ class B:
     def b_throw(self, z):
         raise Exception()
 
+    def __repr__(self):
+        return "B Instance"
+
 def main():
     ReprTraceback.init()
 
