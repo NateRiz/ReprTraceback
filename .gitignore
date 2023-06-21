@@ -19,3 +19,4 @@ __pycache__/
 # Exclude build artifacts
 ReprTraceback.egg-info/
 dist/
+build/
