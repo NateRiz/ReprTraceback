@@ -61,7 +61,7 @@ class ReprTraceback(tb.StackSummary):
                 if formatted_line:
                     f._line = formatted_line
                 f.line
-                f.locals.clear()
+                f.locals = {}
         return result
 
     @staticmethod

@@ -13,6 +13,8 @@ class TestReprTraceback(unittest.TestCase):
             ("test_deleted_local_variable.py", "deleted_arg(integer=5, string='abc', lst=?)"),
             ("test_nested_function.py", "test(a=2)"),
             ("test_class.py", "b_throw(self=B Instance, z='1 test 2 class 3')"),
+            ("test_static.py", "b_throw(z='2 test static 3')"),
+            ("test_cls.py", "b_throw(cls=<class '__main__.B'>, z='3 cls 4')"),
         ]
 
         for test in tests:

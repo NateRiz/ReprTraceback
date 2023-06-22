@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ReprTraceback',
-    version='1.0.2',
+    version='1.0.4',
     description='Improve stack traces with the values associated with each argument in each frame.',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
